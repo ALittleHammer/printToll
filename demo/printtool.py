@@ -20,7 +20,7 @@ def selectPath():
     count.set("file count = %d\n" % (len(file_dir)))
 
 
-def startPritn():
+def startPrint():
     print("start print %s" %path.get())
     i = 0
     file_name = os.listdir(path.get())
@@ -28,6 +28,8 @@ def startPritn():
 
     while i < len(file_dirs):
         ext = os.path.splitext(file_dirs[i])[1]
+        # 记录打印任务开始时间
+        start_time = time.time()
         if ext.startswith('.x'):
             # excel
             xlApp = win32com.client.Dispatch('Excel.Application')
@@ -52,7 +54,22 @@ def startPritn():
             )
 
         print(file_dirs[i])
-        time.sleep(1)
+        time.sleep(5)
+        # 等待打印队列为空
+        while True:
+            default_printer = win32print.GetDefaultPrinter()
+            printer_handle = win32print.OpenPrinter(default_printer)
+            printer_info = win32print.GetPrinter(printer_handle, 2)  # 使用级别2
+            win32print.ClosePrinter(printer_handle)
+
+            # 直接访问字典来获取打印作业数量
+            if printer_info['cJobs'] == 0:
+                break
+            time.sleep(5)  # 可以根据实际情况调整等待时间
+
+        # 记录打印任务结束时间
+        end_time = time.time()
+        print(f"Printing took {end_time - start_time:.2f} seconds.")
         i = i + 1
 
 
@@ -79,7 +96,7 @@ Label(root,text = "path:" ).pack()
 Entry(root, textvariable = path).pack()
 Button(root, text = "choose...", command = selectPath).pack(pady=10)
 countLable = Label(root,textvariable = count,fg='blue').pack()
-Button(root,text="start",command=startPritn).pack()
+Button(root,text="start",command=startPrint).pack()
 
 Label(root,text="author:zmy").pack()
 Label(root,text="wechat:zmycloud").pack()
